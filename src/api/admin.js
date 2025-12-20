@@ -44,6 +44,11 @@ const AdminService = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   deleteProductImage: (productId, imageId) => client.delete(`/api/admin/products/${productId}/images/${imageId}`),
+
+  // Orders
+  getOrders: (params) => client.get('/api/admin/orders', { params }),
+  getOrder: (id) => client.get(`/api/admin/orders/${id}`),
+  updateOrderStatus: (id, orderId, status) => client.put(`/api/admin/orders/${id}/status`, { orderId, status }),
 };
 
 export default AdminService;

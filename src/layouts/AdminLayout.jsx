@@ -16,11 +16,14 @@ const AdminLayout = () => {
           <NavLink to="/admin/products" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             المنتجات
           </NavLink>
+          <NavLink to="/admin/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            الطلبات
+          </NavLink>
           <NavLink to="/admin/collections" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-             التشكيلات
+            التشكيلات
           </NavLink>
           <NavLink to="/admin/discounts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-             الخصومات
+            الخصومات
           </NavLink>
         </nav>
       </aside>

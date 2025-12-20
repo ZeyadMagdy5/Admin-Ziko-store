@@ -11,6 +11,8 @@ import CollectionDetails from './pages/Admin/Collections/CollectionDetails';
 import DiscountList from './pages/Admin/Discounts/DiscountList';
 import DiscountForm from './pages/Admin/Discounts/DiscountForm';
 import DiscountDetails from './pages/Admin/Discounts/DiscountDetails';
+import OrderList from './pages/Admin/Orders/OrderList';
+import OrderDetails from './pages/Admin/Orders/OrderDetails';
 
 // Placeholder for other sections
 const Placeholder = ({ title }) => (
@@ -46,6 +48,10 @@ function App() {
           <Route path="discounts/new" element={<DiscountForm />} />
           <Route path="discounts/edit/:id" element={<DiscountForm />} />
           <Route path="discounts/view/:id" element={<DiscountDetails />} />
+
+          {/* Orders */}
+          <Route path="orders" element={<OrderList />} />
+          <Route path="orders/view/:id" element={<OrderDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>

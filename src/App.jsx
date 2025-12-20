@@ -22,36 +22,43 @@ const Placeholder = ({ title }) => (
   </div>
 );
 
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Redirect root to admin for now, since we are building Admin Dashboard */}
-        <Route path="/" element={<Navigate to="/admin" replace />} />
+        <Route path="/login" element={<Login />} />
 
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
+        <Route element={<ProtectedRoute />}>
+          {/* Redirect root to admin for now, since we are building Admin Dashboard */}
+          <Route path="/" element={<Navigate to="/admin" replace />} />
 
-          <Route path="products" element={<ProductList />} />
-          <Route path="products/new" element={<ProductForm />} />
-          <Route path="products/edit/:id" element={<ProductForm />} />
-          <Route path="products/view/:id" element={<ProductDetails />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
 
-          {/* Collections */}
-          <Route path="collections" element={<CollectionList />} />
-          <Route path="collections/new" element={<CollectionForm />} />
-          <Route path="collections/edit/:id" element={<CollectionForm />} />
-          <Route path="collections/view/:id" element={<CollectionDetails />} />
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/new" element={<ProductForm />} />
+            <Route path="products/edit/:id" element={<ProductForm />} />
+            <Route path="products/view/:id" element={<ProductDetails />} />
 
-          {/* Discounts */}
-          <Route path="discounts" element={<DiscountList />} />
-          <Route path="discounts/new" element={<DiscountForm />} />
-          <Route path="discounts/edit/:id" element={<DiscountForm />} />
-          <Route path="discounts/view/:id" element={<DiscountDetails />} />
+            {/* Collections */}
+            <Route path="collections" element={<CollectionList />} />
+            <Route path="collections/new" element={<CollectionForm />} />
+            <Route path="collections/edit/:id" element={<CollectionForm />} />
+            <Route path="collections/view/:id" element={<CollectionDetails />} />
 
-          {/* Orders */}
-          <Route path="orders" element={<OrderList />} />
-          <Route path="orders/view/:id" element={<OrderDetails />} />
+            {/* Discounts */}
+            <Route path="discounts" element={<DiscountList />} />
+            <Route path="discounts/new" element={<DiscountForm />} />
+            <Route path="discounts/edit/:id" element={<DiscountForm />} />
+            <Route path="discounts/view/:id" element={<DiscountDetails />} />
+
+            {/* Orders */}
+            <Route path="orders" element={<OrderList />} />
+            <Route path="orders/view/:id" element={<OrderDetails />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

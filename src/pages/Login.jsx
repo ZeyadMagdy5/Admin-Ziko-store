@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../layouts/admin.css'; // Reuse admin styles for consistency
+import '../layouts/admin.css';
 
 const Login = () => {
     const [password, setPassword] = useState('');
@@ -10,6 +10,7 @@ const Login = () => {
     const handleLogin = (e) => {
         e.preventDefault();
         const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+        console.log("Env Password:", adminPassword); // Debugging
         if (password === adminPassword) {
             localStorage.setItem('isAdminAuthenticated', 'true');
             navigate('/admin');

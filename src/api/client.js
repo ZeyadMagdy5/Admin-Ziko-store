@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const client = axios.create({
   // VITE_API_URL defaults to '/' to use relative paths (and Vite proxy in dev)
-  baseURL: import.meta.env.VITE_API_URL || '/',
+  baseURL: import.meta.env.VITE_API_URL || 'https://bags-shop.runasp.net',
   headers: {
     'Content-Type': 'application/json',
     // مفتاح الـ API المطلوب من الواجهة الخلفية

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminService from '../../../api/admin';
@@ -149,7 +150,7 @@ const CollectionForm = () => {
           await AdminService.addProductsToCollection(collectionId, toAdd);
         }
         if (toRemove.length > 0) {
-          await AdminService.removeProductsFromCollection(toRemove);
+          await AdminService.removeProductsFromCollection(collectionId, toRemove);
         }
       } catch (linkErr) {
         console.error('Failed to update collection products', linkErr);
@@ -408,7 +409,7 @@ const CollectionForm = () => {
               <div className="form-group">
                 <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>اختر منتجات لإضافتها لهذه التشكيلة:</p>
                 {allProducts.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
                     {allProducts.map(prod => (
                       <label key={prod.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.25rem', border: '1px solid #eee', borderRadius: '4px' }}>
                         <input

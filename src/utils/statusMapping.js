@@ -1,51 +1,71 @@
 
 export const OrderStatusEnum = {
-    Pending: 0,
-    Processing: 1,
-    Shipped: 2,
-    Delivered: 3,
-    Cancelled: 4,
-    Expired: 5,
-    Paid: 6
+  Pending: 0,
+  Processing: 1,
+  Shipped: 2,
+  Delivered: 3,
+  Cancelled: 4
+};
+
+export const PaymentStatusEnum = {
+  Unpaid: 0,
+  Paid: 1,
+  Failed: 2
 };
 
 export const OrderStatusArabic = {
-    Pending: "قيد الانتظار",
-    Processing: "قيد التجهيز",
-    Shipped: "تم الشحن",
-    Delivered: "تم التوصيل",
-    Cancelled: "ملغي",
-    Expired: "منتهي",
-    Paid: "مدفوع"
+  0: "قيد الانتظار",
+  1: "قيد التجهيز",
+  2: "تم الشحن",
+  3: "تم التوصيل",
+  4: "ملغي"
 };
 
 export const PaymentStatusArabic = {
-    Pending: "قيد الانتظار",
-    Completed: "مكتمل",
-    Failed: "فشلت",
-    Confirmed: "مؤكد" // Extra case just in case
+  0: "غير مدفوع / قيد الانتظار",
+  1: "مدفوع",
+  2: "فشل الدفع"
 };
 
 export const getOrderStatusArabic = (status) => {
-    if (!status) return "";
-    // Check if it's already arabic or key exists
-    const key = Object.keys(OrderStatusArabic).find(k => k.toLowerCase() === status.toLowerCase());
-    return key ? OrderStatusArabic[key] : status;
+  if (status === undefined || status === null) return "";
+  // Handle Integer
+  if (OrderStatusArabic[status]) return OrderStatusArabic[status];
+  // Handle String (fallback)
+  const key = Object.keys(OrderStatusEnum).find(k => k.toLowerCase() === String(status).toLowerCase());
+  return key ? OrderStatusArabic[OrderStatusEnum[key]] : status;
 };
 
 export const getPaymentStatusArabic = (status) => {
-    if (!status) return "";
-    const key = Object.keys(PaymentStatusArabic).find(k => k.toLowerCase() === status.toLowerCase());
-    return key ? PaymentStatusArabic[key] : status;
+  if (status === undefined || status === null) return "";
+  // Handle Integer
+  if (PaymentStatusArabic[status]) return PaymentStatusArabic[status];
+
+  return "غير معروف";
 };
 
-export const getStatusBadgeClass = (status) => {
-    if (!status) return 'badge-warning';
-    const lower = status.toLowerCase();
+export const getStatusBadgeClass = (status, type = 'order') => {
+  if (status === undefined || status === null) return 'badge-secondary';
 
-    if (lower === 'paid' || lower === 'completed' || lower === 'delivered') return 'badge-success';
-    if (lower === 'cancelled' || lower === 'expired' || lower === 'failed') return 'badge-danger';
-    if (lower === 'shipped' || lower === 'processing') return 'badge-info';
+  // Normalize to integer if possible
+  let statusInt = status;
+  if (typeof status === 'string') {
+    const enumObj = type === 'payment' ? PaymentStatusEnum : OrderStatusEnum;
+    const key = Object.keys(enumObj).find(k => k.toLowerCase() === status.toLowerCase());
+    if (key) statusInt = enumObj[key];
+  }
 
-    return 'badge-warning';
+  if (type === 'payment') {
+    if (statusInt === PaymentStatusEnum.Paid) return 'badge-success';
+    if (statusInt === PaymentStatusEnum.Failed) return 'badge-danger';
+    return 'badge-warning'; // Unpaid
+  }
+
+  // Order Status
+  if (statusInt === OrderStatusEnum.Delivered) return 'badge-success';
+  if (statusInt === OrderStatusEnum.Cancelled) return 'badge-danger';
+  if (statusInt === OrderStatusEnum.Shipped) return 'badge-primary';
+  if (statusInt === OrderStatusEnum.Processing) return 'badge-info';
+
+  return 'badge-warning'; // Pending
 };

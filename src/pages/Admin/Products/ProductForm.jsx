@@ -92,11 +92,7 @@ const ProductForm = () => {
 
     const cleanPrice = formData.price ? Number(formData.price.toString().replace(/[^0-9.]/g, '')) : 0;
 
-    // Detect if price changed in Edit Mode
-    if (isEditMode && cleanPrice !== initialPrice) {
-      await handleRecreateStrategy(cleanPrice);
-      return;
-    }
+
 
     try {
       let productId = id;
@@ -133,13 +129,14 @@ const ProductForm = () => {
         await AdminService.addProductImages(productId, data);
       }
 
+      setPendingImages([]);
       alert(`تم ${isEditMode ? 'تحديث' : 'إنشاء'} المنتج بنجاح!`);
 
       if (!isEditMode) {
         navigate(`/admin/products/edit/${productId}`);
       } else {
-        setPendingImages([]);
-        fetchProduct();
+        // Force refresh data from server to show updated state
+        await fetchProduct();
       }
 
     } catch (err) {
@@ -151,65 +148,7 @@ const ProductForm = () => {
     }
   };
 
-  const handleRecreateStrategy = async (newPrice) => {
-    try {
-      // 1. Create New Product
-      const response = await AdminService.createProduct({
-        ...formData,
-        price: newPrice,
-        Price: newPrice
-      });
 
-      const newId = response.data?.data || response.data?.id || response.data;
-      if (!newId) throw new Error("Failed to get new product ID");
-
-      // 2. Activate if it was active
-      if (isActive) {
-        try { await AdminService.activateProduct(newId); } catch (e) { console.error("Activation warning", e); }
-      }
-
-      // 3. Migrate Existing Images
-      if (images.length > 0) {
-        const migrationData = new FormData();
-        let hasFiles = false;
-
-        for (const img of images) {
-          try {
-            // img is usually object with { id, imageUrl }
-            const url = img.imageUrl || img;
-            const file = await urlToFile(url, `migrated_image_${Date.now()}.jpg`, 'image/jpeg');
-            migrationData.append('images', file);
-            hasFiles = true;
-          } catch (err) {
-            console.error("Failed to migrate image", err);
-          }
-        }
-
-        if (hasFiles) {
-          await AdminService.addProductImages(newId, migrationData);
-        }
-      }
-
-      // 4. Upload New Pending Images
-      if (pendingImages.length > 0) {
-        const newData = new FormData();
-        pendingImages.forEach(p => newData.append('images', p.file));
-        await AdminService.addProductImages(newId, newData);
-      }
-
-      // 5. Delete Old Product
-      await AdminService.deleteProduct(id);
-
-      alert('تم تحديث السعر بنجاح (تم إعادة إنشاء المنتج).');
-      navigate('/admin/products');
-
-    } catch (err) {
-      console.error(err);
-      setError('فشل في عملية تحديث السعر المعقدة. يرجى المحاولة مرة أخرى.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileSelect = (e) => {
     if (!e.target.files.length) return;
@@ -280,20 +219,7 @@ const ProductForm = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           {isEditMode && (
             <>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={async () => {
-                  if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-                    await AdminService.deleteProduct(id);
-                    navigate('/admin/products');
-                  }
-                }}
-                style={{ background: '#ef4444', color: 'white', borderColor: 'transparent' }}
-                title="حذف المنتج"
-              >
-                حذف
-              </button>
+
               <button
                 type="button"
                 className={`btn ${isActive ? 'btn-warning' : 'btn-success'}`}

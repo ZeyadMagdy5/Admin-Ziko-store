@@ -7,12 +7,13 @@ const AdminService = {
   getCollection: (id) => client.get(`/api/admin/collections/${id}`),
   updateCollection: (id, data) => client.put(`/api/admin/collections/${id}`, data),
   deleteCollection: (id) => client.delete(`/api/admin/collections/${id}`),
+
   activateCollection: (id) => client.post(`/api/admin/collections/${id}/activate`, {}, { headers: { 'Content-Type': 'application/json' } }),
   deactivateCollection: (id) => client.post(`/api/admin/collections/${id}/deactivate`, {}, { headers: { 'Content-Type': 'application/json' } }),
   addProductsToCollection: (collectionId, productIds) =>
     client.post(`/api/admin/collections/${collectionId}/products`, productIds),
-  removeProductsFromCollection: (productIds) =>
-    client.delete('/api/admin/collections/products', { data: productIds }),
+  removeProductsFromCollection: (collectionId, productIds) =>
+    client.delete('/api/admin/collections/products', { params: { collectionId }, data: productIds }),
   addCollectionImages: (id, formData) => client.post(`/api/admin/collections/${id}/images`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
@@ -26,7 +27,8 @@ const AdminService = {
   deleteDiscount: (id) => client.delete(`/api/admin/discounts/${id}`),
   activateDiscount: (id) => client.post(`/api/admin/discounts/${id}/activate`, {}, { headers: { 'Content-Type': 'application/json' } }),
   deactivateDiscount: (id) => client.post(`/api/admin/discounts/${id}/deactivate`, {}, { headers: { 'Content-Type': 'application/json' } }),
-  getDiscountProducts: (id, params) => client.get(`/api/admin/discounts/${id}/products`, { params }),
+  // Redirecting to products filter as specific endpoint returns 405
+  getDiscountProducts: (id, params) => client.get('/api/admin/products', { params: { ...params, DiscountId: id } }),
   addProductsToDiscount: (discountId, productIds) =>
     client.post(`/api/admin/discounts/${discountId}/products`, productIds),
   removeProductsFromDiscount: (productIds) =>
@@ -39,7 +41,6 @@ const AdminService = {
   updateProduct: (id, data) => client.put(`/api/admin/products/${id}`, data),
   activateProduct: (id) => client.post(`/api/admin/products/${id}/activate`, {}, { headers: { 'Content-Type': 'application/json' } }),
   deactivateProduct: (id) => client.post(`/api/admin/products/${id}/deactivate`, {}, { headers: { 'Content-Type': 'application/json' } }),
-  deleteProduct: (id) => client.delete(`/api/admin/products/${id}`),
   addProductImages: (id, formData) => client.post(`/api/admin/products/${id}/images`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
@@ -48,7 +49,7 @@ const AdminService = {
   // Orders
   getOrders: (params) => client.get('/api/admin/orders', { params }),
   getOrder: (id) => client.get(`/api/admin/orders/${id}`),
-  updateOrderStatus: (id, orderId, status) => client.put(`/api/admin/orders/${id}/status`, { orderId, status }),
+  updateOrderStatus: (id, status) => client.put(`/api/admin/orders/${id}/status`, { status }),
 };
 
 export default AdminService;

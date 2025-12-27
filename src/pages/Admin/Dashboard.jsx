@@ -16,6 +16,15 @@ const Dashboard = () => {
             </div>
           </div>
         </Link>
+        
+        <Link to="/admin/orders" className="dashboard-card-link">
+          <div className="card dashboard-card">
+            <div>
+              <h2 className="dashboard-card-title">الطلبات</h2>
+              <p className="dashboard-card-text">متابعة الطلبات المكتملة والجارية.</p>
+            </div>
+          </div>
+        </Link>
 
         <Link to="/admin/collections" className="dashboard-card-link">
           <div className="card dashboard-card">

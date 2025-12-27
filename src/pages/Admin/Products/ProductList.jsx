@@ -77,27 +77,14 @@ const ProductList = () => {
       // Optional: Re-fetch to ensure sync, but optimistic is usually enough for UX
       // setTimeout(fetchProducts, 500); 
     } catch (err) {
-            console.error(err);
-            const backendMessage = err.response?.data?.message || err.response?.data || err.message;
-            alert(`فشل في ${newStatus ? 'تنشيط' : 'إلغاء تنشيط'} المنتج: ${backendMessage}`);
-            fetchProducts(); // Revert on error
-        }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('هل أنت متأكد أنك تريد حذف هذا المنتج نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-    try {
-      await AdminService.deleteProduct(id);
-      setProducts(prev => prev.filter(p => p.id !== id));
-    } catch (err) {
       console.error(err);
-      const backendMessage =
-        err.response?.data?.message ||
-        err.response?.data?.title ||
-        (typeof err.response?.data === 'string' ? err.response.data : null);
-      alert(backendMessage || `فشل حذف المنتج (${err.response?.status || 'Unknown Error'}).`);
+      const backendMessage = err.response?.data?.message || err.response?.data || err.message;
+      alert(`فشل في ${newStatus ? 'تنشيط' : 'إلغاء تنشيط'} المنتج: ${backendMessage}`);
+      fetchProducts(); // Revert on error
     }
   };
+
+
 
   if (loading && products.length === 0) {
     return <div className="p-4">جاري تحميل المنتجات...</div>;
@@ -194,9 +181,7 @@ const ProductList = () => {
                               تنشيط
                             </button>
                           )}
-                          <button onClick={() => handleDelete(product.id)} className="delete-btn" style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#ef4444' }} title="حذف المنتج">
-                            حذف
-                          </button>
+
                         </div>
                       </td>
                     </tr>

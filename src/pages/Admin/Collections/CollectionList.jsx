@@ -60,32 +60,29 @@ const CollectionList = () => {
     fetchCollections();
   }, [page, search, filterStatus]);
 
-    const handleToggleStatus = async (id, newStatus) => {
-        try {
-            // Optimistic Update
-            setCollections(prev => prev.map(c => {
-                if (c.id !== id) return c;
-                return { ...c, isActive: newStatus, IsActive: newStatus };
-            }));
+  const handleToggleStatus = async (id, newStatus) => {
+    try {
+      // Optimistic Update
+      setCollections(prev => prev.map(c => {
+        if (c.id !== id) return c;
+        return { ...c, isActive: newStatus, IsActive: newStatus };
+      }));
 
-            if (newStatus) {
-                await AdminService.activateCollection(id);
-            } else {
-                await AdminService.deactivateCollection(id);
-            }
-        } catch (err) {
-            console.error(err);
-            alert(`فشل في ${newStatus ? 'تنشيط' : 'إلغاء تنشيط'} التشكيلة.`);
-            fetchCollections();
-        }
-    };
+      if (newStatus) {
+        await AdminService.activateCollection(id);
+      } else {
+        await AdminService.deactivateCollection(id);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(`فشل في ${newStatus ? 'تنشيط' : 'إلغاء تنشيط'} التشكيلة.`);
+      fetchCollections();
+    }
+  };
 
   const handleDelete = async (id) => {
     if (!window.confirm('هل أنت متأكد أنك تريد حذف هذه التشكيلة نهائيًا؟ سيتم فك ارتباط المنتجات وحذف الصور المرتبطة.')) return;
-    
-    // Optimistic UI update could be risky here if it fails, so we'll wait.
-    // Ensure we show loading or some indication? For now just async await.
-    
+
     try {
       // 1. Fetch details to find dependencies
       const detailsRes = await AdminService.getCollection(id);
@@ -97,30 +94,42 @@ const CollectionList = () => {
       // 3. Remove Products associations
       const products = data.products || [];
       if (products.length > 0) {
-          const pids = products.map(p => p.id);
-          await AdminService.removeProductsFromCollection(pids);
+        const pids = products.map(p => p.id);
+        await AdminService.removeProductsFromCollection(id, pids);
       }
 
       // 4. Remove Images
       const images = data.images || [];
       if (images.length > 0) {
-          // Delete sequentially to avoid overwhelming server or parallel with Promise.all
-          await Promise.all(images.map(img => AdminService.deleteCollectionImage(id, img.id).catch(() => {})));
+        // Delete sequentially to avoid overwhelming server or parallel with Promise.all
+        await Promise.all(images.map(img => AdminService.deleteCollectionImage(id, img.id).catch(() => { })));
       }
 
       // 5. Finally Delete Collection
       await AdminService.deleteCollection(id);
-      
+
       setCollections(prev => prev.filter(c => c.id !== id));
       alert('تم حذف التشكيلة بنجاح.');
-      
+
     } catch (err) {
       console.error(err);
-      const backendMessage = err.response?.data?.message || err.response?.data || err.message;
-      alert(`فشل في حذف التشكيلة (حاول مرة أخرى): ${backendMessage}`);
-      fetchCollections(); // Refresh list to be safe
+      const status = err.response?.status;
+      let backendMessage = err.response?.data?.message || err.response?.data || err.message;
+      if (typeof backendMessage === 'object') {
+        backendMessage = JSON.stringify(backendMessage);
+      }
+
+      if (status === 409 || (typeof backendMessage === 'string' && backendMessage.includes('can\'t delete'))) {
+        // Fallback: It's likely already deactivated by step 2.
+        alert(`تنبيه: لا يمكن حذف هذه التشكيلة نهائيًا بسبب قيود النظام، ولكن تم "إلغاء تنشيطها" بنجاح. ستظهر الآن كغير نشطة.`);
+      } else {
+        alert(`فشل في حذف التشكيلة: ${backendMessage}`);
+      }
+      fetchCollections(); // Refresh list to show updated status
     }
   };
+
+
 
   if (loading && collections.length === 0) {
     return <div className="p-4">جاري تحميل التشكيلات...</div>;
@@ -215,6 +224,7 @@ const CollectionList = () => {
                               تنشيط
                             </button>
                           )}
+
                           <button onClick={() => handleDelete(collection.id)} className="delete-btn" style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#ef4444' }} title="حذف نهائي">
                             حذف
                           </button>

@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 const client = axios.create({
-  // تأكد من ضبط VITE_API_URL في ملف .env مثلاً:
-  // VITE_API_URL=http://bags-shop.runasp.net
-  baseURL: import.meta.env.VITE_API_URL || 'http://bags-shop.runasp.net',
+  // VITE_API_URL defaults to '/' to use relative paths (and Vite proxy in dev)
+  baseURL: import.meta.env.VITE_API_URL || '/',
   headers: {
     'Content-Type': 'application/json',
     // مفتاح الـ API المطلوب من الواجهة الخلفية

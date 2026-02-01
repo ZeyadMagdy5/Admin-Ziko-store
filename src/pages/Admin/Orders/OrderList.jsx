@@ -58,6 +58,28 @@ const OrderList = () => {
     fetchOrders();
   }, [page, createdFrom, createdTo, paymentStatusFilter]); // Added paymentStatusFilter to dependency
 
+  // Delete Handler
+  const handleDelete = async (id) => {
+    if (!window.confirm('هل أنت متأكد أنك تريد حذف هذا الطلب؟ سيتم إزالته من السجلات.')) return;
+
+    // Optimistically remove from UI
+    const previousOrders = [...orders];
+    setOrders(prev => prev.filter(o => o.id !== id));
+
+    try {
+      await AdminService.deleteOrder(id);
+      alert('تم الحذف بنجاح');
+    } catch (err) {
+      console.error("Delete failed", err);
+      // Revert if critical error, but if 404 or similar, ignore
+      const status = err.response?.status;
+      if (status === 404) return; // Already deleted
+
+      setOrders(previousOrders);
+      alert('فشل في حذف الطلب. قد يكون مرتبط بيانات أخرى.');
+    }
+  };
+
   // Client-Side Filter Logic (Fallback if backend ignores param)
   const filteredOrders = orders.filter(order => {
     if (paymentStatusFilter !== '') {
@@ -169,9 +191,16 @@ const OrderList = () => {
                       <td>{order.finalPrice} ج.م</td>
                       <td>{new Date(order.createdAt).toLocaleDateString('ar-EG')}</td>
                       <td>
-                        <Link to={`/admin/orders/view/${order.id}`} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>
+                        <Link to={`/admin/orders/view/${order.id}`} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
                           تفاصيل
                         </Link>
+                        <button
+                          onClick={() => handleDelete(order.id)}
+                          className="btn"
+                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#ef4444', color: 'white' }}
+                        >
+                          حذف
+                        </button>
                       </td>
                     </tr>
                   ))

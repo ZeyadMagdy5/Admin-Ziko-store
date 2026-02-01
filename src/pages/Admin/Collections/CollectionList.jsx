@@ -8,7 +8,7 @@ const CollectionList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'inactive'
+  const [filterStatus, setFilterStatus] = useState('all'); // Show all by default, so 'inactive' items are visible
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
@@ -31,7 +31,22 @@ const CollectionList = () => {
       // Handle Envelope: response.data = { success: true, data: { items: [...] } or [...] }
       const envelopeData = response.data?.data || response.data;
       const items = envelopeData?.items || envelopeData || [];
-      setCollections(Array.isArray(items) ? items : []);
+      
+      // Enforce client-side filtering
+      let finalItems = Array.isArray(items) ? items : [];
+
+      // 1. Filter out "Deleted" items (Hidden locally)
+      const hiddenIds = JSON.parse(localStorage.getItem('hiddenDeletedIds') || '[]');
+      finalItems = finalItems.filter(i => !hiddenIds.includes(i.id));
+
+      // 2. Apply Status Filter
+      if (filterStatus === 'active') {
+        finalItems = finalItems.filter(i => (i.isActive !== undefined ? i.isActive : i.IsActive) !== false);
+      } else if (filterStatus === 'inactive') {
+        finalItems = finalItems.filter(i => (i.isActive !== undefined ? i.isActive : i.IsActive) === false);
+      }
+
+      setCollections(finalItems);
     } catch (err) {
       console.error(err);
       const status = err.response?.status;
@@ -81,51 +96,35 @@ const CollectionList = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('هل أنت متأكد أنك تريد حذف هذه التشكيلة نهائيًا؟ سيتم فك ارتباط المنتجات وحذف الصور المرتبطة.')) return;
+    // Updated confirmation to reflect "Archive" behavior
+    if (!window.confirm('هل أنت متأكد أنك تريد أرشفة هذه التشكيلة (إخفائها من المتجر)؟')) return;
+
+    // Optimistically remove from UI
+    const previousCollections = [...collections];
+    setCollections(prev => prev.filter(c => c.id !== id));
 
     try {
-      // 1. Fetch details to find dependencies
-      const detailsRes = await AdminService.getCollection(id);
-      const data = detailsRes.data?.data || detailsRes.data;
+      // 1. Deactivate (Soft Delete on Server)
+      await AdminService.deactivateCollection(id);
 
-      // 2. Deactivate (Best practice before delete)
-      try { await AdminService.deactivateCollection(id); } catch (e) { /* ignore if already inactive */ }
-
-      // 3. Remove Products associations
-      const products = data.products || [];
-      if (products.length > 0) {
-        const pids = products.map(p => p.id);
-        await AdminService.removeProductsFromCollection(id, pids);
+      // 2. Mark as Deleted Locally (Persist hiding)
+      const hiddenIds = JSON.parse(localStorage.getItem('hiddenDeletedIds') || '[]');
+      if (!hiddenIds.includes(id)) {
+          hiddenIds.push(id);
+          localStorage.setItem('hiddenDeletedIds', JSON.stringify(hiddenIds));
       }
-
-      // 4. Remove Images
-      const images = data.images || [];
-      if (images.length > 0) {
-        // Delete sequentially to avoid overwhelming server or parallel with Promise.all
-        await Promise.all(images.map(img => AdminService.deleteCollectionImage(id, img.id).catch(() => { })));
-      }
-
-      // 5. Finally Delete Collection
-      await AdminService.deleteCollection(id);
-
-      setCollections(prev => prev.filter(c => c.id !== id));
-      alert('تم حذف التشكيلة بنجاح.');
-
+      
+      // Success Message
+      // User requested "Hide it", so we confirm deletion.
+      // alert("تم الحذف بنجاح"); 
+      
     } catch (err) {
-      console.error(err);
-      const status = err.response?.status;
-      let backendMessage = err.response?.data?.message || err.response?.data || err.message;
-      if (typeof backendMessage === 'object') {
-        backendMessage = JSON.stringify(backendMessage);
-      }
-
-      if (status === 409 || (typeof backendMessage === 'string' && backendMessage.includes('can\'t delete'))) {
-        // Fallback: It's likely already deactivated by step 2.
-        alert(`تنبيه: لا يمكن حذف هذه التشكيلة نهائيًا بسبب قيود النظام، ولكن تم "إلغاء تنشيطها" بنجاح. ستظهر الآن كغير نشطة.`);
-      } else {
-        alert(`فشل في حذف التشكيلة: ${backendMessage}`);
-      }
-      fetchCollections(); // Refresh list to show updated status
+      console.error("Deactivation failed", err);
+      // Revert UI on failure
+      setCollections(previousCollections);
+      
+      const msg = err.response?.data?.message || err.message || "حدث خطأ";
+      alert(`فشل في حذف التشكيلة: ${msg}`);
     }
   };
 

@@ -50,6 +50,7 @@ const AdminService = {
   getOrders: (params) => client.get('/api/admin/orders', { params }),
   getOrder: (id) => client.get(`/api/admin/orders/${id}`),
   updateOrderStatus: (id, status) => client.put(`/api/admin/orders/${id}/status`, { status }),
+  deleteOrder: (id) => client.delete(`/api/admin/orders/${id}`),
 };
 
 export default AdminService;
